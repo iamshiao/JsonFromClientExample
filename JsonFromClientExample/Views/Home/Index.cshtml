@@ -1,0 +1,136 @@
+﻿@using JsonFromClientExample.Controllers
+@model List<Person>
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+@section styles{
+    <style>
+        label.error {
+            color: red;
+        }
+
+        .topGap {
+            margin: 80px 0 0 0;
+        }
+
+        .lblForTxt {
+            margin-right: 10px;
+        }
+
+        .gapBtwUI {
+            margin-right: 10px;
+        }
+
+        .peopleTable {
+            border: 2px solid black;
+            width: 600px;
+        }
+
+            .peopleTable th, td {
+                border: 2px solid black;
+            }
+
+            .peopleTable th {
+                background-color: navy;
+                color: white;
+            }
+
+        .fromServ th {
+            background-color: #722F37;
+            color: white;
+        }
+    </style>
+}
+
+<div class="row topGap">
+    <div class="row">
+        <h1>JSON Example</h1>
+        <div class="bg-info">
+            <p><i>Controller'll filter out people who r under 18yo.</i></p>
+        </div>
+        <table class="peopleTable fromServ">
+            <caption>From Serv</caption>
+            <tbody>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                </tr>
+                @if (@Model != null)
+                {
+                    foreach (var x in @Model)
+                    {
+                        <tr><td>@x.name</td><td>@x.age</td></tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <hr />
+    <div class="row topGap">
+        <label class="lblForTxt">Name:</label><input class="required gapBtwUI" type="text" name="txtName" value="someName" />
+        <label class="lblForTxt">Age:</label><input class="required number gapBtwUI" type="text" name="txtAge" value="18" />
+        <input type="button" id="add" class="gapBtwUI" name="add" value="add" onclick="addPerson()" />
+        <input type="button" id="btn" name="btn" value="submit" />
+        @using (Html.BeginForm("Index", "Home", FormMethod.Post, new { id = "form1" }))
+        {
+            <input name="hdPeople" type="hidden" />
+        }
+    </div>
+    <hr />
+    <div class="row">
+        <table id="peopleTable" class="peopleTable">
+            <caption>Client input</caption>
+            <tbody>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th></th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        // Add new row
+        function addPerson() {
+            var strOfNewRow = '<tr class="dataRow">';
+            strOfNewRow += '<td>' + $('input[name="txtName"]').val() + '</td>';
+            strOfNewRow += '<td>' + $('input[name="txtAge"]').val() + '</td>';
+            strOfNewRow += '<td><input type="button" value="del" class="rowPerson" /></td>'
+            strOfNewRow += '</tr>';
+            $('.peopleTable tr:last').after(strOfNewRow);
+        }
+
+        $(function () {
+            // Remove row
+            $(".peopleTable").on("click", ".rowPerson", function (e) {
+                $(this).closest('tr').remove();
+            });
+
+            // Make input type btn instead of submit since we gonna convert table data before submit
+            $('#btn').click(function () {
+                // Turn table into an array
+                var people = [];
+                $('#peopleTable').find('tr.dataRow').each(function (i, el) {
+                    var $tds = $(this).find('td'),
+                    tmpName = $tds.eq(0).text(),
+                    tmpAge = $tds.eq(1).text();
+                    var tmpPerson = { name: tmpName, age: tmpAge };
+                    people.push(tmpPerson);
+                });
+
+                // Convert javascript array to json format string and assgin to hiddenfield for form post
+                var jsonStr = JSON.stringify(people);
+                $('input[name="hdPeople"]').val(jsonStr);
+
+                // If u wanna use jquery submit like below, make sure there r no other tag named(or id as) sumbit.
+                // Otherwise this method wont work
+                $("#form1").submit();
+            });
+        });
+    </script>
+}
